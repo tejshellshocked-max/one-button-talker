@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>One-Button Talker</title>
+<meta name="description" content="Talk with one blink or one tap. A free communication app for people who can't speak or move.">
+<meta name="theme-color" content="#0a0f1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Talker">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/favicon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app" aria-live="polite">
+  <div id="topbar">
+    <div id="title"><img src="icons/icon-192.png" alt=""><span id="pagename">Home</span></div>
+    <div id="pills">
+      <div class="pill" id="linkpill" title="Caregiver link">🔗 <span id="linktext">linked</span></div>
+      <div class="pill" id="campill"><span class="dot" id="camdot"></span><video id="video" muted playsinline></video>
+        <span id="camtext">camera off</span><span id="eyemeter"><i></i></span></div>
+    </div>
+  </div>
+  <div id="message"><div id="msgtext" class="empty"></div><div id="msgcount"></div><div id="blinkbar"></div></div>
+  <div id="grid"></div>
+  <div id="footer"><span id="status"></span><span id="speed"></span></div>
+</div>
+
+<!-- start screen: a tap is needed before a phone allows sound and the camera -->
+<div class="overlay show" id="start">
+  <div class="sheet">
+    <img src="icons/icon-512.png" alt="">
+    <h1>One-Button Talker</h1>
+    <p class="tag">Talk with one blink or one tap. Built for people who can't speak or move, and for the people who care for them.</p>
+    <div class="btns">
+      <button class="btn" id="startcam">Start with blink control</button>
+      <button class="btn ghost" id="starttap">Start with tap only</button>
+    </div>
+    <p class="hint">Tap anywhere on the screen (or blink for half a second) when your row lights up.<br>
+      Turn the phone's silent switch off so you can hear it talk.</p>
+    <p id="installhint">Tip: tap Share, then <b>Add to Home Screen</b> to install it as an app.</p>
+  </div>
+</div>
+
+<div class="overlay" id="yesno">
+  <div class="q" id="ynq"></div>
+  <div class="big"><div class="tile" id="yn-yes">YES</div><div class="tile" id="yn-no">NO</div></div>
+  <div class="tile back" id="yn-back">BACK</div>
+</div>
+
+<div class="overlay" id="rest">
+  <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+  <h2>Resting</h2>
+  <p>Hold a blink for 1.5 seconds, or tap, to wake up.</p>
+  <div id="restbar"><i></i></div>
+</div>
+
+<div class="overlay" id="help">
+  <div class="sheet">
+    <h2>How to use it</h2>
+    <p>A highlight moves down the rows. When your row lights up, <b>tap anywhere</b> (or hold a blink for half a second).
+       Then do it again when your item lights up.</p>
+    <table>
+      <tr><td>Tap / blink</td><td>the one button</td></tr>
+      <tr><td>HOME</td><td>pages of ready phrases: needs, feelings, pain, people, chat</td></tr>
+      <tr><td>KEYBOARD</td><td>spell anything, with word suggestions that learn your words</td></tr>
+      <tr><td>I NEED HELP</td><td>alarm sound, red screen and a caregiver alert</td></tr>
+      <tr><td>SETTINGS</td><td>speed, voice, talking scan, camera, calibration, caregiver link</td></tr>
+      <tr><td>Keyboard keys</td><td>Space = press · H help · C caregiver link · Y yes/no · F fullscreen</td></tr>
+    </table>
+    <p class="hint">Tap anywhere to close.</p>
+  </div>
+</div>
+
+<div class="overlay" id="linkview">
+  <div class="sheet">
+    <h2>Caregiver link</h2>
+    <p>Scan this with a family member's or nurse's phone. They'll see what you say, get help alerts, and can ask you yes/no questions. It works anywhere, on Wi-Fi or cellular.</p>
+    <div id="qr"></div>
+    <div id="linkurl"></div>
+    <div class="btns">
+      <button class="btn" id="sharelink">Share link</button>
+      <button class="btn ghost" id="newlink">New link</button>
+    </div>
+    <p class="hint">🔒 Messages are end-to-end encrypted. Tap anywhere else to close.</p>
+  </div>
+</div>
+
+<div class="overlay" id="calib">
+  <div class="sheet">
+    <h2>Camera calibration</h2>
+    <div class="big" id="calibstep">Get ready…</div>
+    <svg id="calibring" viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" id="calibfg" cx="60" cy="60" r="52"/></svg>
+    <div id="calibresult"></div>
+    <p class="hint" id="calibhint">Follow the voice. It takes about 20 seconds.</p>
+  </div>
+</div>
+
+<div id="alarm"><span>HELP NEEDED</span></div>
+<div id="banner"><small>MESSAGE FROM YOUR CAREGIVER</small><div id="bannertext"></div></div>
+
+<script src="vendor/qrcode.js"></script>
+<script type="module" src="app.js"></script>
+<script>
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>

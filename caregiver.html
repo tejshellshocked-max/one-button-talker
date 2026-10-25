@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Talker Care">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/favicon.png">
+<title>Talker · Caregiver</title>
+<style>
+  :root { --bg:#0a0f1e; --card:#131a30; --line:rgba(255,255,255,.09); --ink:#f4f6fb; --muted:#8d97b5;
+          --accent:#6d8bff; --ok:#34d399; --bad:#ef4444; --q:#a78bfa; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin:0; background: radial-gradient(900px 500px at 10% -10%, #1b2550 0%, transparent 60%), var(--bg);
+         color:var(--ink); font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+         padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); min-height:100vh; }
+  header { display:flex; align-items:center; gap:10px; padding:14px 16px; position:sticky; top:0; z-index:5;
+           background:rgba(10,15,30,.85); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+           border-bottom:1px solid var(--line); }
+  header img { width:32px; height:32px; border-radius:9px; }
+  header h1 { font-size:17px; margin:0; flex:1; }
+  #conn { font-size:13px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+  .dot { width:10px; height:10px; border-radius:50%; background:var(--muted); display:inline-block; }
+  main { max-width:560px; margin:0 auto; padding:12px 16px 40px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .card h2 { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0 0 10px; }
+  #alert { display:none; background:linear-gradient(135deg,#ef4444,#b91c1c); border-radius:18px; padding:16px;
+           margin-bottom:12px; animation:pulse 1.2s infinite; }
+  #alert .what { font-size:24px; font-weight:800; margin:2px 0 12px; }
+  @keyframes pulse { 50% { box-shadow:0 0 0 8px rgba(239,68,68,.25); } }
+  #status { display:flex; align-items:center; gap:12px; }
+  #status .big { font-size:21px; font-weight:800; }
+  #status .sub { color:var(--muted); font-size:14px; }
+  button { font:inherit; border:0; border-radius:12px; padding:12px 14px; background:var(--accent); color:#fff;
+           font-weight:700; cursor:pointer; }
+  button.ghost { background:rgba(255,255,255,.07); color:var(--ink); font-weight:550; border:1px solid var(--line); }
+  button.white { background:#fff; color:#b91c1c; width:100%; font-size:18px; }
+  button:active { transform:scale(.98); }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+  .chips button { padding:9px 12px; font-size:15px; }
+  form { display:flex; gap:8px; }
+  input { flex:1; min-width:0; font:inherit; padding:12px; border-radius:12px; border:1px solid var(--line);
+          background:rgba(255,255,255,.05); color:var(--ink); }
+  #feed { list-style:none; margin:0; padding:0; }
+  #feed li { padding:10px 12px; border-radius:12px; margin-bottom:8px; background:rgba(255,255,255,.04); }
+  #feed .meta { font-size:12px; color:var(--muted); display:flex; justify-content:space-between; }
+  #feed .txt { font-size:18px; font-weight:700; margin-top:2px; word-wrap:break-word; }
+  #feed li.said { background:rgba(52,211,153,.1); }
+  #feed li.alert { background:rgba(239,68,68,.16); border-left:4px solid var(--bad); }
+  #feed li.question, #feed li.answer, #feed li.message { background:rgba(167,139,250,.12); }
+  #feed li.answer .txt { color:#c4b5fd; }
+  .empty { color:var(--muted); text-align:center; padding:14px 0; }
+  .small { color:var(--muted); font-size:13px; }
+  code { background:rgba(255,255,255,.08); padding:2px 6px; border-radius:6px; font-size:13px; word-break:break-all; }
+  #toast { position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+           background:#f4f6fb; color:#0a0f1e; padding:10px 16px; border-radius:12px; font-weight:600;
+           opacity:0; transition:opacity .2s; pointer-events:none; max-width:90vw; }
+  #nokey { display:none; text-align:center; padding:40px 20px; color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <img src="icons/icon-192.png" alt="">
+  <h1>Caregiver</h1>
+  <div id="conn"><span class="dot" id="conndot"></span><span id="conntext">Connecting…</span></div>
+</header>
+<main>
+  <div id="nokey">Open this page with the link or QR code from the patient's app<br>(SETTINGS → CAREGIVER LINK).</div>
+  <div id="ui">
+    <div id="alert">
+      <div>🚨 HELP ALERT</div>
+      <div class="what" id="alerttext"></div>
+      <button class="white" id="coming">I'm coming</button>
+    </div>
+
+    <section class="card">
+      <h2>Patient</h2>
+      <div id="status"><span class="dot" id="pdot" style="width:16px;height:16px"></span>
+        <div><div class="big" id="pstate">Waiting…</div><div class="sub" id="psub">Open the app on the patient's device.</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Ask a yes / no question</h2>
+      <div class="chips" id="askchips"></div>
+      <form id="askform"><input id="askinput" maxlength="120" placeholder="Type a yes/no question…" autocomplete="off"><button>Ask</button></form>
+    </section>
+
+    <section class="card">
+      <h2>Send a message to their screen</h2>
+      <div class="chips" id="msgchips"></div>
+      <form id="msgform"><input id="msginput" maxlength="120" placeholder="Type a short message…" autocomplete="off"><button>Send</button></form>
+    </section>
+
+    <section class="card">
+      <h2>Conversation</h2>
+      <ul id="feed"></ul>
+      <div class="empty" id="empty">Nothing yet. Everything the patient says will show up here.</div>
+    </section>
+
+    <section class="card">
+      <h2>Alerts when your phone is locked</h2>
+      <p class="small">Install the free <b>ntfy</b> app, tap <b>+</b>, and subscribe to this topic. You'll get a loud
+        notification whenever the patient asks for help, even with this page closed. (It only says "help alert", nothing private.)</p>
+      <p><code id="alerttopic"></code> <button class="ghost" id="copytopic" style="padding:6px 10px;font-size:13px">Copy</button></p>
+      <p class="small">🔒 Conversation messages are end-to-end encrypted.</p>
+    </section>
+  </div>
+</main>
+<div id="toast"></div>
+<script type="module" src="caregiver.js"></script>
+</body>
+</html>
