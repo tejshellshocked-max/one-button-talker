@@ -18,6 +18,8 @@ second** in front of the front camera. Do it again when your item lights up. One
 - **I AM IN PAIN** jumps straight to the Pain page: a **0-10 pain scale** (the question every nurse asks;
   8 or higher also alerts the caregiver) plus where it hurts
 - **Yes/No screen**, **Rest mode** (scanning stops until a long blink), **talking scan** for low vision
+- **My Phrases:** a caregiver types the person's own phrases (one per line, e.g. "CALL MAYA"), saved on the
+  device and shown as their own page on the home screen
 - **Settings work with the one button too:** speed, voice, camera, calibration, caregiver link
 
 ## Look to select (Apple Eye Tracking)

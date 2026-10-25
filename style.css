@@ -212,3 +212,7 @@ body {
   #footer { display: none; }
   #topbar { min-height: 30px; }
 }
+/* My Phrases editor */
+#phrasebox { width: 100%; font: inherit; font-size: 18px; padding: 12px; border-radius: 14px;
+             border: 1px solid var(--card-line); background: rgba(255,255,255,.06); color: var(--ink);
+             user-select: text; -webkit-user-select: text; }

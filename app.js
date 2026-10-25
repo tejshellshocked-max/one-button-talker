@@ -46,6 +46,42 @@ const pages = (() => {                 // caregivers can customise pages later; 
 })();
 const pageNames = pages.map(([n]) => n);
 
+// ---------- My Phrases (typed by a caregiver, saved on this device) ----------
+let myPhrases = load("myPhrases", []);
+
+function saveMyPhrases(text) {
+  myPhrases = text.split("\n")
+    .map((line) => line.trim().toUpperCase())
+    .filter((line) => line !== "")
+    .slice(0, 15);
+  save("myPhrases", myPhrases);
+  _rowsKey = "";                      // tell the screen to rebuild with the new phrases
+}
+
+function openEditor() {
+  $("phrasebox").value = myPhrases.join("\n");
+  $("editor").classList.add("show");
+  S.overlay = "editor";
+}
+
+function closeEditor() {
+  $("editor").classList.remove("show");
+  S.overlay = null;
+}
+
+$("savephrases").addEventListener("click", () => {
+  saveMyPhrases($("phrasebox").value);
+  closeEditor();
+  goPage("MY PHRASES");
+  S.status = "Saved " + myPhrases.length + " phrases.";
+  render();
+});
+
+$("cancelphrases").addEventListener("click", () => {
+  closeEditor();
+  render();
+});
+
 // ---------- sound and speech ----------
 let audio = null;
 function audioCtx() {
@@ -113,7 +149,7 @@ const S = {
 function rowsNow() {
   const quick = { kind: "quick", items: QUICK };
   if (S.page === "HOME") {
-    return [quick, ...chunks(["KEYBOARD", ...pageNames, ...MENU_EXTRA], 3).map((r) => ({ kind: "menu", items: r }))];
+    return [quick, ...chunks(["KEYBOARD", ...pageNames, "MY PHRASES", ...MENU_EXTRA], 3).map((r) => ({ kind: "menu", items: r }))];
   }
   if (S.page === "SETTINGS") {
     const v = currentVoice();
@@ -126,6 +162,10 @@ function rowsNow() {
       { kind: "setting", items: ["CALIBRATE CAMERA", "CAREGIVER LINK", "HELP"] },
       { kind: "setting", items: ["MODE: " + (settings.direct ? "TOUCH / EYE GAZE" : "SCAN")] },
       { kind: "nav", items: ["HOME"] }];
+  }
+  if (S.page === "MY PHRASES") {
+    return [quick, ...chunks(myPhrases, 3).map((r) => ({ kind: "phrase", items: r })),
+            { kind: "nav", items: ["HOME", "EDIT MY PHRASES"] }];
   }
   const page = pages.find(([n]) => n === S.page);
   if (page) {
@@ -237,7 +277,7 @@ function press() {
   if (!S.started) return;
   S.lastPress = Date.now();
   if (S.overlay) {                            // a press closes help / link screens
-    if (S.overlay === "calib" && calib.running) return;
+    if ((S.overlay === "calib" && calib.running) || S.overlay === "editor") return;
     S.overlay = null;
     render();
     return;
@@ -315,6 +355,7 @@ function choose(kind, item) {
       else { goPage(item); if (pageNames.includes(item)) S.jumpTo = 1; }
       return;
     case "nav":
+      if (item === "EDIT MY PHRASES") { openEditor(); return; }
       goPage(item);
       return;
     case "scale": {
@@ -681,7 +722,7 @@ $("newlink").addEventListener("pointerdown", async (e) => {
 
 // ---------- input: tap anywhere, keyboard, blink ----------
 document.addEventListener("pointerdown", (e) => {
-  if (!S.started || e.target.closest("button")) return;
+  if (!S.started || e.target.closest("button, #editor")) return;
   e.preventDefault();
   audioCtx();
   if (settings.direct) touchSelect(e.target); else press();
@@ -735,8 +776,8 @@ function setDirect(on) {
   render();
 }
 document.addEventListener("keydown", (e) => {
-  if (!S.started) return;
-  const k = e.key.toLowerCase();
+  if (!S.started || S.overlay === "editor") return;
+    const k = e.key.toLowerCase();
   if (k === " " || k === "enter") { e.preventDefault(); if (!e.repeat) press(); }
   else if (k === "h") { S.overlay = S.overlay === "help" ? null : "help"; render(); }
   else if (k === "c") { if (S.overlay === "link") S.overlay = null; else showLink(); render(); }
