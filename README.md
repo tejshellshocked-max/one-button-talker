@@ -66,7 +66,11 @@ detection.
 | `sw.js`, `manifest.webmanifest`, `icons/` | installable app + offline support |
 | `vendor/`, `models/` | MediaPipe Tasks Vision (Apache-2.0) and its face model; qrcode-generator (MIT) |
 
-The first version was a Python desktop app (pygame + OpenCV); this web version brings it to phones and tablets.
+
+## How it started
+The first version was a Python desktop app (pygame + OpenCV). It's in [`desktop-version/`](desktop-version/),
+along with **our eye-gaze experiments**: the measurements that showed a normal webcam can't reliably tell
+which of 26 letters you're looking at, which is why the app is built around a deliberate blink.
 
 ## AI use
 We used an AI assistant (Claude) to help write parts of this code. See our submission for details.

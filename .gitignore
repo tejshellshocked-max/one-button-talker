@@ -1,0 +1,11 @@
+# never upload: Python cache, the app's learned/private data, local camera files
+__pycache__/
+desktop-version/user_words.txt
+desktop-version/user_pairs.txt
+desktop-version/sentences.txt
+desktop-version/settings.json
+desktop-version/phone_alert.txt
+desktop-version/calibration.json
+desktop-version/camera_log.txt
+desktop-version/face_landmarker.task
+SUBMISSION_NOTES.md

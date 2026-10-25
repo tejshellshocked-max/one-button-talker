@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f2a37">
+<title>Talker Caregiver</title>
+<style>
+  :root {
+    --bg: #f3f4f6; --card: #ffffff; --ink: #111827; --muted: #6b7280; --line: #e5e7eb;
+    --accent: #2563eb; --accent-ink: #ffffff; --ok: #16a34a; --rest: #9ca3af;
+    --alert: #dc2626; --alert-soft: #fee2e2; --q: #7c3aed; --q-soft: #ede9fe;
+    --said-soft: #ecfdf5; --chip: #eef2ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f141a; --card: #1a222c; --ink: #f3f4f6; --muted: #9ca3af; --line: #2b3542;
+      --accent: #3b82f6; --chip: #23304a; --alert-soft: #3a1717; --q-soft: #2a2140; --said-soft: #12261d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  header { background: #1f2a37; color: #fff; padding: 14px 16px; display: flex;
+           align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 17px; margin: 0; font-weight: 650; }
+  #conn { font-size: 13px; display: flex; align-items: center; gap: 6px; opacity: .9; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rest); display: inline-block; }
+  main { max-width: 560px; margin: 0 auto; padding: 12px 16px 40px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+          padding: 14px; margin-bottom: 12px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+             margin: 0 0 10px; font-weight: 650; }
+  #status { display: flex; align-items: center; gap: 12px; }
+  #status .big { font-size: 20px; font-weight: 700; }
+  #status .sub { color: var(--muted); font-size: 14px; }
+  #alert { display: none; background: var(--alert); color: #fff; border-radius: 14px; padding: 16px;
+           margin-bottom: 12px; animation: pulse 1.2s infinite; }
+  #alert .what { font-size: 22px; font-weight: 800; margin: 2px 0 12px; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(220,38,38,.25); } }
+  button { font: inherit; border: 0; border-radius: 10px; padding: 12px 14px; cursor: pointer;
+           background: var(--accent); color: var(--accent-ink); font-weight: 650; }
+  button.ghost { background: var(--chip); color: var(--ink); font-weight: 550; }
+  button.white { background: #fff; color: var(--alert); width: 100%; font-size: 18px; }
+  button:active { transform: scale(.98); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .chips button { padding: 9px 12px; font-size: 15px; }
+  .row { display: flex; gap: 8px; }
+  input { flex: 1; min-width: 0; font: inherit; padding: 12px; border-radius: 10px;
+          border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+  #feed { list-style: none; margin: 0; padding: 0; }
+  #feed li { padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; background: var(--bg); }
+  #feed li .meta { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+  #feed li .txt { font-size: 18px; font-weight: 600; margin-top: 2px; word-wrap: break-word; }
+  #feed li.said { background: var(--said-soft); }
+  #feed li.alert { background: var(--alert-soft); border-left: 4px solid var(--alert); }
+  #feed li.question, #feed li.answer { background: var(--q-soft); }
+  #feed li.answer .txt { color: var(--q); }
+  .empty { color: var(--muted); text-align: center; padding: 16px 0; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #111827;
+           color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 15px; opacity: 0;
+           transition: opacity .2s; pointer-events: none; max-width: 90vw; }
+</style>
+</head>
+<body>
+<header>
+  <h1>One-Button Talker &middot; Caregiver</h1>
+  <div id="conn"><span class="dot" id="conndot"></span><span id="conntext">Connecting…</span></div>
+</header>
+<main>
+  <div id="alert">
+    <div>HELP ALERT</div>
+    <div class="what" id="alerttext"></div>
+    <button class="white" id="coming">I'm coming</button>
+  </div>
+
+  <section class="card">
+    <h2>Patient</h2>
+    <div id="status">
+      <span class="dot" id="pdot" style="width:16px;height:16px"></span>
+      <div><div class="big" id="pstate">—</div><div class="sub" id="psub">Waiting for the laptop…</div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Ask a yes / no question</h2>
+    <div class="chips" id="askchips"></div>
+    <form class="row" id="askform">
+      <input id="askinput" maxlength="120" placeholder="Type a yes/no question…" autocomplete="off">
+      <button type="submit">Ask</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Send a message to their screen</h2>
+    <div class="chips" id="msgchips"></div>
+    <form class="row" id="msgform">
+      <input id="msginput" maxlength="120" placeholder="Type a short message…" autocomplete="off">
+      <button type="submit">Send</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Conversation</h2>
+    <ul id="feed"></ul>
+    <div class="empty" id="empty">Nothing yet. Everything the patient says will appear here.</div>
+  </section>
+</main>
+<div id="toast"></div>
+
+<script>
+const KEY = new URLSearchParams(location.search).get("key") || "";
+const ASK = ["Are you in pain?", "Are you thirsty?", "Are you cold?", "Do you need the bathroom?",
+             "Do you want to sleep?", "Are you okay?"];
+const MSG = ["I'm coming", "Be right there", "I love you", "Try to rest", "Doctor is on the way"];
+const LABEL = { said: "Said", alert: "HELP", question: "You asked", answer: "Answer",
+                message: "You sent", info: "Info" };
+let lastId = 0, failures = 0, lastAlertId = 0, ackAlertId = 0, audio = null;
+
+const $ = id => document.getElementById(id);
+function toast(t) { const el = $("toast"); el.textContent = t; el.style.opacity = 1;
+  clearTimeout(toast.h); toast.h = setTimeout(() => el.style.opacity = 0, 1800); }
+function ago(sec) { sec = Math.max(0, Math.round(sec));
+  if (sec < 60) return sec + "s ago"; if (sec < 3600) return Math.round(sec / 60) + " min ago";
+  return Math.round(sec / 3600) + " h ago"; }
+function clock(t) { return new Date(t * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }
+
+function chips(box, list, fn) {
+  list.forEach(text => { const b = document.createElement("button");
+    b.type = "button"; b.className = "ghost"; b.textContent = text; b.onclick = () => fn(text);
+    $(box).appendChild(b); });
+}
+
+async function post(path, text) {
+  try {
+    const r = await fetch(path + "?key=" + encodeURIComponent(KEY),
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+    if (!r.ok) throw 0;
+    return true;
+  } catch (e) { toast("Couldn't reach the laptop"); return false; }
+}
+async function ask(text) { if (await post("/api/ask", text)) toast("Asked: " + text); }
+async function send(text) { if (await post("/api/message", text)) toast("Sent: " + text); }
+
+function beep() {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    [0, .35, .7].forEach(d => { const o = audio.createOscillator(), g = audio.createGain();
+      o.frequency.value = 880; o.connect(g); g.connect(audio.destination);
+      g.gain.setValueAtTime(.25, audio.currentTime + d); o.start(audio.currentTime + d);
+      o.stop(audio.currentTime + d + .2); });
+  } catch (e) {}
+}
+
+function addEvent(e) {
+  $("empty").style.display = "none";
+  const li = document.createElement("li"); li.className = e.kind;
+  const meta = document.createElement("div"); meta.className = "meta";
+  const a = document.createElement("span"); a.textContent = LABEL[e.kind] || e.kind;
+  const b = document.createElement("span"); b.textContent = clock(e.t);
+  meta.append(a, b);
+  const txt = document.createElement("div"); txt.className = "txt"; txt.textContent = e.text;
+  li.append(meta, txt);
+  $("feed").prepend(li);
+  while ($("feed").children.length > 100) $("feed").lastChild.remove();
+}
+
+function showStatus(s, now) {
+  const idle = now - (s.last_press || now);
+  $("pdot").style.background = s.resting ? "var(--rest)" : "var(--ok)";
+  $("pstate").textContent = s.resting ? "Resting" : "Awake";
+  $("psub").textContent = "On " + (s.page || "HOME").toLowerCase() + " page · last press " + ago(idle);
+}
+
+async function poll() {
+  try {
+    const r = await fetch("/api/state?key=" + encodeURIComponent(KEY) + "&since=" + lastId, { cache: "no-store" });
+    if (r.status === 403) { $("conntext").textContent = "Wrong link"; $("conndot").style.background = "var(--alert)"; return; }
+    const d = await r.json();
+    failures = 0;
+    $("conndot").style.background = "var(--ok)"; $("conntext").textContent = "Connected";
+    const firstLoad = lastId === 0;
+    d.events.forEach(e => {
+      addEvent(e); lastId = Math.max(lastId, e.id);
+      if (e.kind === "alert" && now_recent(e, d.now)) { lastAlertId = e.id; $("alerttext").textContent = e.text; }
+      if (e.kind === "message" && e.text === "I'm coming") ackAlertId = Math.max(ackAlertId, lastAlertId);
+    });
+    const alertOn = lastAlertId > ackAlertId;
+    if (alertOn && $("alert").style.display !== "block") {
+      $("alert").style.display = "block";
+      if (!firstLoad) { if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]); beep(); }
+    }
+    if (!alertOn) $("alert").style.display = "none";
+    showStatus(d.status, d.now);
+  } catch (e) {
+    if (++failures > 2) { $("conndot").style.background = "var(--alert)"; $("conntext").textContent = "Can't reach laptop"; }
+  } finally { setTimeout(poll, 1500); }
+}
+function now_recent(e, now) { return now - e.t < 300; }   // alerts older than 5 min don't pop up
+
+$("coming").onclick = async () => { if (await send("I'm coming")) { ackAlertId = lastAlertId; $("alert").style.display = "none"; } };
+$("askform").onsubmit = e => { e.preventDefault(); const v = $("askinput").value.trim(); if (v) { ask(v); $("askinput").value = ""; } };
+$("msgform").onsubmit = e => { e.preventDefault(); const v = $("msginput").value.trim(); if (v) { send(v); $("msginput").value = ""; } };
+chips("askchips", ASK, ask);
+chips("msgchips", MSG, send);
+document.addEventListener("click", () => { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }, { once: true });
+poll();
+</script>
+</body>
+</html>
