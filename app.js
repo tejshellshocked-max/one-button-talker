@@ -31,7 +31,7 @@ const icon = (name) => (ICONS[name] ? `<svg viewBox="0 0 24 24">${ICONS[name]}</
 
 // ---------- settings saved on this device ----------
 const settings = Object.assign(
-  { scan: 1.0, audioScan: false, layout: "smart", voice: null, camera: true },
+  { scan: 1.0, audioScan: false, layout: "smart", voice: null, camera: true, direct: false },
   load("settings", {}) || {}
 );
 settings.scan = Math.min(MAX_SCAN, Math.max(MIN_SCAN, Number(settings.scan) || 1.0));
@@ -122,6 +122,7 @@ function rowsNow() {
       { kind: "setting", items: ["LETTERS: " + settings.layout.toUpperCase(),
                                  "CAMERA: " + (settings.camera ? "ON" : "OFF")] },
       { kind: "setting", items: ["CALIBRATE CAMERA", "CAREGIVER LINK", "HELP"] },
+      { kind: "setting", items: ["MODE: " + (settings.direct ? "TOUCH / EYE GAZE" : "SCAN")] },
       { kind: "nav", items: ["HOME"] }];
   }
   const page = pages.find(([n]) => n === S.page);
@@ -146,7 +147,7 @@ function rowsNow() {
 let _rows = null, _rowsKey = "";
 function rows() {
   const key = [S.page, S.text, settings.layout, words.version, settings.audioScan, settings.scan,
-               settings.voice, settings.camera].join("|");
+               settings.voice, settings.camera, settings.direct].join("|");
   if (key !== _rowsKey) { _rowsKey = key; _rows = rowsNow(); }
   return _rows;
 }
@@ -388,6 +389,8 @@ function chooseSetting(item) {
     showLink();
   } else if (item === "HELP") {
     S.overlay = "help";
+  } else if (item.startsWith("MODE")) {
+    setDirect(!settings.direct);
   }
   saveSettings();
 }
@@ -407,6 +410,7 @@ function wake() {
 
 // ---------- scanning clock ----------
 function update(dt) {
+  if (settings.direct) return;      // touch / eye-gaze mode: you pick tiles directly, nothing moves
   if (S.paused || S.resting || S.overlay) return;
   S.timer += dt;
   const wait = settings.scan * (S.index === 0 ? 1.5 : 1);   // first item waits longer
@@ -460,6 +464,8 @@ function render() {
         if ((r.kind === "phrase" || r.kind === "quick") && isAlert(label)) cls += " urgent";
         if (r.kind === "menu") cls += " c-" + label.replace(/[^A-Z]/g, "");
         t.className = cls;
+        t.dataset.r = ri;
+        t.dataset.c = items.indexOf(label);
         const ic = r.kind === "menu" ? icon(label)
           : label === "BACK" ? icon("BACK") : label === "HOME" ? icon("HOME")
           : label === "SPEAK" ? icon("SPEAK") : label === "I NEED HELP" ? icon("HELP") : "";
@@ -501,11 +507,12 @@ function highlight() {
     rowEl.classList.toggle("dim", S.mode === "item" && r !== S.row);
     const tiles = rowEl.children;
     for (let c = 0; c < tiles.length; c++) {
-      const lit = !S.yesno && ((S.mode === "row" && r === S.index) || (S.mode === "item" && r === S.row && c === S.index));
+      const lit = !settings.direct && !S.yesno &&
+        ((S.mode === "row" && r === S.index) || (S.mode === "item" && r === S.row && c === S.index));
       tiles[c].classList.toggle("lit", lit);
     }
   }
-  ["yn-yes", "yn-no", "yn-back"].forEach((id, i) => $(id).classList.toggle("lit", S.yesno && S.index === i));
+  ["yn-yes", "yn-no", "yn-back"].forEach((id, i) => $(id).classList.toggle("lit", !settings.direct && S.yesno && S.index === i));
 }
 
 function drawLive() {
@@ -661,8 +668,56 @@ document.addEventListener("pointerdown", (e) => {
   if (!S.started || e.target.closest("button")) return;
   e.preventDefault();
   audioCtx();
-  press();
+  if (settings.direct) touchSelect(e.target); else press();
 }, { passive: false });
+
+// ---------- touch / eye-gaze mode ----------
+// The tile you touch is picked directly. With Apple's Eye Tracking turned on
+// (Settings > Accessibility > Eye Tracking), looking at a tile and holding your
+// gaze makes iOS tap it - so you select by LOOKING, with no moving highlight.
+function touchSelect(target) {
+  S.lastPress = Date.now();
+  if (S.overlay) { if (!(S.overlay === "calib" && calib.running)) { S.overlay = null; render(); } return; }
+  if (S.resting) { wake(); return; }
+  if (S.yesno) {
+    const i = { "yn-yes": 0, "yn-no": 1, "yn-back": 2 }[target.closest(".tile")?.id];
+    if (i == null) return;
+    S.index = i;
+    press();                    // same YES / NO / BACK handling as scanning
+    return;
+  }
+  const tile = target.closest("#grid .tile");
+  if (!tile) return;
+  const r = Number(tile.dataset.r), c = Number(tile.dataset.c);
+  const row = rows()[r];
+  if (!row || row.items[c] == null) return;
+  S.presses++;
+  const kind = row.kind, item = row.items[c];
+  tile.classList.add("lit");                       // quick flash so you see what was picked
+  setTimeout(() => tile.classList.remove("lit"), 250);
+  if (kind !== "quick" && item !== "SPEAK") click();
+  S.mode = "row";
+  choose(kind, item);
+  S.jumpTo = null;
+  S.index = 0;
+  render();
+}
+
+function setDirect(on) {
+  settings.direct = on;
+  saveSettings();
+  S.mode = "row"; S.index = 0; S.timer = 0;
+  if (on) {
+    // Apple's Eye Tracking needs the front camera, so our blink camera steps aside
+    stopCamera();
+    settings.camera = false;
+    S.status = "Touch / eye-gaze mode: tap (or look and hold) on any tile.";
+  } else {
+    S.status = "Scan mode: tap anywhere, or blink, when your row lights up.";
+  }
+  saveSettings();
+  render();
+}
 document.addEventListener("keydown", (e) => {
   if (!S.started) return;
   const k = e.key.toLowerCase();
@@ -681,8 +736,9 @@ async function keepAwake() {
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") keepAwake(); });
 
 // ---------- start ----------
-async function begin(useCamera) {
+async function begin(useCamera, direct = false) {
   S.started = true;
+  settings.direct = direct;
   $("start").classList.remove("show");
   audioCtx();
   if ("speechSynthesis" in window) {             // unlocks speech on iPhone (needs a tap)
@@ -699,8 +755,12 @@ async function begin(useCamera) {
 }
 $("startcam").addEventListener("click", () => begin(true));
 $("starttap").addEventListener("click", () => begin(false));
+$("startgaze").addEventListener("click", () => begin(false, true));
 if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone) $("installhint").style.display = "block";
-if (!settings.camera) {           // remember the last choice: put that button first
+if (settings.direct) {            // remember the last choice: put that button first
+  $("startgaze").className = "btn"; $("startcam").className = "btn ghost";
+  $("startgaze").parentNode.prepend($("startgaze"));
+} else if (!settings.camera) {
   $("starttap").className = "btn"; $("startcam").className = "btn ghost";
   $("starttap").parentNode.prepend($("starttap"));
 }

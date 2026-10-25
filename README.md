@@ -19,6 +19,12 @@ second** in front of the front camera. Do it again when your item lights up. One
 - **Yes/No screen**, **Rest mode** (scanning stops until a long blink), **talking scan** for low vision
 - **Settings work with the one button too:** speed, voice, camera, calibration, caregiver link
 
+## Look to select (Apple Eye Tracking)
+On iPhone 12 or newer (iOS 18+), turn on **Settings → Accessibility → Eye Tracking**, then start the app
+with **Touch / Apple Eye Tracking** (or Settings → MODE). The moving highlight turns off and every tile
+can be picked directly: **look at a tile and hold your gaze**, and iOS taps it. iPhones keep gaze data
+private from apps and websites, so this works by turning the system's gaze-tap into a direct pick.
+
 ## Blink detection
 Google's MediaPipe face model finds 478 points on the face every frame, **on the device; no video is
 ever uploaded**. We measure the eye aspect ratio (eyelid gap ÷ eye width) plus the model's own "blink"
