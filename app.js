@@ -10,6 +10,8 @@ const $ = (id) => document.getElementById(id);
 const MIN_SCAN = 0.5, MAX_SCAN = 3.0;
 const CONTROL_ROW = ["SPACE", "DEL", "SPEAK", "REPEAT", "CLEAR", "HOME"];
 const MENU_EXTRA = ["YES / NO", "SETTINGS", "REST"];
+const PAIN_SCALE = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+const PAIN_ALARM = 8;          // a pain score this high also alerts the caregiver
 
 // ---------- icons (simple line drawings) ----------
 const ICONS = {
@@ -127,7 +129,9 @@ function rowsNow() {
   }
   const page = pages.find(([n]) => n === S.page);
   if (page) {
-    return [quick, ...chunks(page[1], 3).map((r) => ({ kind: "phrase", items: r })),
+    // PAIN page: a 0-10 pain scale first - the question every nurse and doctor asks
+    const scale = S.page === "PAIN" ? [{ kind: "scale", items: PAIN_SCALE }] : [];
+    return [quick, ...scale, ...chunks(page[1], 3).map((r) => ({ kind: "phrase", items: r })),
             { kind: "nav", items: ["HOME", "KEYBOARD"] }];
   }
   // KEYBOARD
@@ -284,7 +288,7 @@ function press() {
 
 function restartRow(kind, item) {
   if (S.jumpTo != null) { const j = S.jumpTo; S.jumpTo = null; return j; }
-  if (S.page !== "KEYBOARD") return kind === "phrase" ? 1 : 0;   // stay on the phrases
+  if (S.page !== "KEYBOARD") return kind === "phrase" || kind === "scale" ? 1 : 0;   // stay on the phrases
   const typing = kind === "letters" || kind === "suggest" || item === "SPACE" || item === "DEL";
   if (!typing) return 0;
   const kinds = rows().map((r) => r.kind);
@@ -302,7 +306,7 @@ function choose(kind, item) {
       if (kind === "quick" && PAIN_PHRASES.has(item) && pageNames.includes("PAIN") && S.page !== "PAIN") {
         goPage("PAIN");
         S.jumpTo = 1;
-        S.status = 'Said: "I am in pain" - where does it hurt?';
+        S.status = 'Said: "I am in pain" - how bad (0-10), and where?';
       }
       return;
     case "menu":
@@ -313,6 +317,13 @@ function choose(kind, item) {
     case "nav":
       goPage(item);
       return;
+    case "scale": {
+      const n = Number(item);
+      const line = `My pain is ${n} out of 10.`;
+      if (n >= PAIN_ALARM) alarm(line); else say(line);
+      S.status = `Said: "${line}"` + (n >= PAIN_ALARM ? " - caregiver alerted." : "");
+      return;
+    }
     case "history":
       say(item);
       words.learnSentence(item);
@@ -429,7 +440,8 @@ function update(dt) {
   announce();
 }
 
-const ROW_NAMES = { quick: "phrases", suggest: "words", control: "controls", history: "recent" };
+const ROW_NAMES = { quick: "phrases", suggest: "words", control: "controls", history: "recent",
+                    scale: "pain scale" };
 function announce() {
   if (!settings.audioScan || Date.now() < S.alarmUntil + 3000) return;
   const opts = options();
@@ -463,6 +475,10 @@ function render() {
         let cls = "tile " + (label === "BACK" ? "back" : r.kind);
         if ((r.kind === "phrase" || r.kind === "quick") && isAlert(label)) cls += " urgent";
         if (r.kind === "menu") cls += " c-" + label.replace(/[^A-Z]/g, "");
+        if (r.kind === "scale" && label !== "BACK") {
+          // green (0) to red (10), like the pain charts in hospitals
+          t.style.setProperty("--hue", Math.round(130 - Number(label) * 13));
+        }
         t.className = cls;
         t.dataset.r = ri;
         t.dataset.c = items.indexOf(label);

@@ -15,7 +15,8 @@ second** in front of the front camera. Do it again when your item lights up. One
 - **Keyboard** with word prediction from 57,000 words, with patient words and medicine names first.
   It learns the user's own words, word pairs and sentences.
 - **Help alarm:** a siren, a flashing red screen, and an alert on the caregiver's phone
-- **I AM IN PAIN** jumps straight to the Pain page to say where it hurts
+- **I AM IN PAIN** jumps straight to the Pain page: a **0-10 pain scale** (the question every nurse asks;
+  8 or higher also alerts the caregiver) plus where it hurts
 - **Yes/No screen**, **Rest mode** (scanning stops until a long blink), **talking scan** for low vision
 - **Settings work with the one button too:** speed, voice, camera, calibration, caregiver link
 

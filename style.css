@@ -73,6 +73,10 @@ body {
 .row.dim { opacity: .28; }
 .row.quick { flex: .8; }
 .row.control .tile { font-size: min(var(--tile-font), calc(100cqw / var(--n) * 0.155)); }
+.row.scale { flex: .85; }
+.row.scale .tile { font-size: min(calc(var(--tile-font) * 1.1), calc(100cqw / var(--n) * 0.5)); font-weight: 850;
+                   white-space: nowrap; overflow-wrap: normal; padding: 2px;
+                   background: hsla(var(--hue, 0), 75%, 50%, .22); border-color: hsla(var(--hue, 0), 75%, 55%, .45); }
 .row.letters .tile { font-size: min(calc(var(--tile-font) * 1.15), calc(100cqw / var(--n) * 0.5)); }
 .tile {
   flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -190,6 +194,11 @@ body {
 #help td { padding: 5px 10px; vertical-align: top; }
 #help td:first-child { color: var(--lit); font-weight: 800; white-space: nowrap; }
 
+/* wide screens: put the small icon beside the words in the quick row so short rows still fit */
+@media (orientation: landscape) {
+  .row.quick .tile { flex-direction: row; gap: .35em; }
+  .row.quick .tile svg { width: 1.1em; height: 1.1em; }
+}
 @media (orientation: portrait) {
   :root { --tile-font: clamp(13px, 1.9vw + 1vh, 26px); }
 }
