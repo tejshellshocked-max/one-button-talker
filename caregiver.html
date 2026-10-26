@@ -3,32 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f3f1ec">
+<meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Talker Care">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/favicon.png">
 <title>Talker · Caregiver</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
-  :root { --bg:#f3f1ec; --card:#ffffff; --line:#d6d1c7; --ink:#1c1b19; --muted:#6b665e;
-          --accent:#1f4e8c; --ok:#2f7d4f; --bad:#b3261e; --q:#1f4e8c; }
+  :root { --bg:#f2f2f7; --card:#ffffff; --line:rgba(60,60,67,.12); --ink:#000; --muted:#8a8a8e;
+          --accent:#007aff; --ok:#34c759; --bad:#ff3b30; --q:#007aff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#000; --card:#1c1c1e; --line:rgba(84,84,88,.5); --ink:#fff; --muted:#98989f;
+            --accent:#0a84ff; --ok:#30d158; --bad:#ff453a; --q:#0a84ff; }
+  }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { margin:0; background: var(--bg);
-         color:var(--ink); font:16px/1.4 "Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+         color:var(--ink); font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
          padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); min-height:100vh; }
   header { display:flex; align-items:center; gap:10px; padding:14px 16px; position:sticky; top:0; z-index:5;
-           background:rgba(243,241,236,.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+           background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
            border-bottom:1px solid var(--line); }
   header img { width:32px; height:32px; border-radius:9px; }
   header h1 { font-size:17px; margin:0; flex:1; }
   #conn { font-size:13px; color:var(--muted); display:flex; align-items:center; gap:6px; }
   .dot { width:10px; height:10px; border-radius:50%; background:var(--muted); display:inline-block; }
   main { max-width:560px; margin:0 auto; padding:12px 16px 40px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .card { background:var(--card); border:0; box-shadow:0 1px 3px rgba(0,0,0,.05); border-radius:18px; padding:14px; margin-bottom:12px; }
   .card h2 { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0 0 10px; }
-  #alert { display:none; background:#b3261e; border-radius:18px; padding:16px;
+  #alert { display:none; background:var(--bad); border-radius:18px; padding:16px;
            margin-bottom:12px; animation:pulse 1.2s infinite; }
   #alert .what { font-size:24px; font-weight:800; margin:2px 0 12px; }
   @keyframes pulse { 50% { box-shadow:0 0 0 8px rgba(239,68,68,.25); } }
@@ -37,27 +40,27 @@
   #status .sub { color:var(--muted); font-size:14px; }
   button { font:inherit; border:0; border-radius:12px; padding:12px 14px; background:var(--accent); color:#fff;
            font-weight:700; cursor:pointer; }
-  button.ghost { background:#fff; color:var(--ink); font-weight:550; border:1px solid var(--line); }
+  button.ghost { background:color-mix(in srgb, var(--ink) 6%, var(--card)); color:var(--accent); font-weight:550; border:0; }
   button.white { background:#fff; color:#b91c1c; width:100%; font-size:18px; }
   button:active { transform:scale(.98); }
   .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
   .chips button { padding:9px 12px; font-size:15px; }
   form { display:flex; gap:8px; }
   input { flex:1; min-width:0; font:inherit; padding:12px; border-radius:12px; border:1px solid var(--line);
-          background:#fff; color:var(--ink); }
+          background:var(--card); color:var(--ink); }
   #feed { list-style:none; margin:0; padding:0; }
-  #feed li { padding:10px 12px; border-radius:12px; margin-bottom:8px; background:#fff; border:1px solid var(--line); }
+  #feed li { padding:10px 12px; border-radius:12px; margin-bottom:8px; background:var(--card); border:0; }
   #feed .meta { font-size:12px; color:var(--muted); display:flex; justify-content:space-between; }
   #feed .txt { font-size:18px; font-weight:700; margin-top:2px; word-wrap:break-word; }
-  #feed li.said { background:#eaf1ec; }
-  #feed li.alert { background:#fbe6e3; border-left:4px solid var(--bad); }
-  #feed li.question, #feed li.answer, #feed li.message { background:#e9edf3; }
-  #feed li.answer .txt { color:#1f4e8c; font-weight:700; }
+  #feed li.said { background:var(--card); }
+  #feed li.alert { background:color-mix(in srgb, var(--bad) 14%, var(--card)); border-left:4px solid var(--bad); }
+  #feed li.question, #feed li.answer, #feed li.message { background:color-mix(in srgb, var(--accent) 10%, var(--card)); }
+  #feed li.answer .txt { color:var(--accent); font-weight:700; }
   .empty { color:var(--muted); text-align:center; padding:14px 0; }
   .small { color:var(--muted); font-size:13px; }
-  code { background:#ece8df; padding:2px 6px; border-radius:6px; font-size:13px; word-break:break-all; }
+  code { background:color-mix(in srgb, var(--ink) 7%, transparent); padding:2px 6px; border-radius:6px; font-size:13px; word-break:break-all; }
   #toast { position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); transform:translateX(-50%);
-           background:#1c1b19; color:#fff; padding:10px 16px; border-radius:12px; font-weight:600;
+           background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:12px; font-weight:600;
            opacity:0; transition:opacity .2s; pointer-events:none; max-width:90vw; }
   #nokey { display:none; text-align:center; padding:40px 20px; color:var(--muted); }
 </style>
