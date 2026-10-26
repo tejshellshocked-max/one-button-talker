@@ -191,7 +191,7 @@ function rowsNow() {
 let _rows = null, _rowsKey = "";
 function rows() {
   const key = [S.page, S.text, settings.layout, words.version, settings.audioScan, settings.scan,
-               settings.voice, settings.camera, settings.direct].join("|");
+               settings.voice, settings.camera, settings.direct, myPhrases.join("/")].join("|");
   if (key !== _rowsKey) { _rowsKey = key; _rows = rowsNow(); }
   return _rows;
 }
