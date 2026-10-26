@@ -246,4 +246,6 @@ body {
 /* My Phrases editor */
 #phrasebox { width: 100%; font: inherit; font-size: 18px; padding: 12px; border-radius: 14px;
              border: 0; background: var(--tint-gray); color: var(--ink);
-             user-select: text; -webkit-user-select: text; }
+             user-select: text; -webkit-user-select: text; }/* pop-up sheets (help, caregiver link, My Phrases, calibration): dim and blur what's behind them */
+#help, #linkview, #editor, #calib { background: rgba(0, 0, 0, .7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#help .sheet, #linkview .sheet, #editor .sheet, #calib .sheet { box-shadow: 0 20px 60px rgba(0, 0, 0, .6); }
