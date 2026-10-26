@@ -5,14 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>One-Button Talker</title>
 <meta name="description" content="Talk with one blink or one tap. A free communication app for people who can't speak or move.">
-<meta name="theme-color" content="#0a0f1e">
+<meta name="theme-color" content="#f3f1ec">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Talker">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,7 +23,7 @@
   <div id="topbar">
     <div id="title"><img src="icons/icon-192.png" alt=""><span id="pagename">Home</span></div>
     <div id="pills">
-      <div class="pill" id="linkpill" title="Caregiver link">🔗 <span id="linktext">linked</span></div>
+      <div class="pill" id="linkpill" title="Caregiver link"><span class="dot" style="background:var(--ok)"></span><span id="linktext">linked</span></div>
       <div class="pill" id="campill"><span class="dot" id="camdot"></span><video id="video" muted playsinline></video>
         <span id="camtext">camera off</span><span id="eyemeter"><i></i></span></div>
     </div>
@@ -90,7 +93,7 @@
       <button class="btn" id="sharelink">Share link</button>
       <button class="btn ghost" id="newlink">New link</button>
     </div>
-    <p class="hint">🔒 Messages are end-to-end encrypted. Tap anywhere else to close.</p>
+    <p class="hint">Messages are end-to-end encrypted. Tap anywhere else to close.</p>
   </div>
 </div>
 
