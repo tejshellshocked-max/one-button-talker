@@ -18,7 +18,8 @@ const RIGHT_EYE = [362, 385, 387, 263, 373, 380];
 export const HOLD_SECONDS = 0.35;   // a deliberate blink; normal blinks are ~0.1-0.15 s
 export const WAKE_SECONDS = 1.5;    // hold this long to wake from REST
 const EAR_START = 0.2;              // "closed" line until we learn this person's eyes
-const LOOK_DOWN = 0.35;             // looking-down score above this = eyes aimed down
+const BLINK_SCORE = 0.55;            // face model's "eyes closed" score that counts as closed
+const LOOK_DOWN = 0.35;            // looking-down score above this = eyes aimed down
 const STALE_MS = 1000;
 
 function dist(a, b) {
@@ -160,7 +161,9 @@ export class BlinkButton {
       const base = this.baseline ?? 2 * EAR_START;
       return r.ear < Math.max(0.05, 0.28 * base);
     }
-    return r.ear < this.threshold;
+    // either sign counts: the eyelid gap is small, OR the face model itself is
+    // confident the eyes are shut (helps with glasses, dim light, odd angles)
+    return r.ear < this.threshold || (r.blink != null && r.blink > BLINK_SCORE);
   }
 
   learn(r) {
