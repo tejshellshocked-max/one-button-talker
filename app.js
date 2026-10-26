@@ -583,6 +583,16 @@ function drawLive() {
   $("camdot").style.background = { tracked: "var(--ok)", noface: "var(--bad)", starting: "var(--warn)",
                                    error: "var(--bad)" }[st] || "var(--muted)";
   $("camtext").textContent = eyes ? eyes.message : "camera off";
+  // big, plain help at the bottom when the camera is on but can't see a blink yet
+  if (eyes && eyes.stream && st !== "tracked") {
+    $("status").textContent = st === "noface"
+      ? "Camera can't see your face: sit 1-2 feet away with light in front of you."
+      : "Camera: " + eyes.message;
+  } else if (eyes && st === "error") {
+    $("status").textContent = "Camera: " + eyes.message + ". Tap still works.";
+  } else if ($("status").textContent !== S.status) {
+    $("status").textContent = S.status;
+  }
   const r = eyes && eyes.reading();
   const open = r && blinkBtn.baseline ? Math.max(0, Math.min(1, r.ear / blinkBtn.baseline)) : 0;
   const meter = $("eyemeter").firstElementChild;

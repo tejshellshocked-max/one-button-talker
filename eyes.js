@@ -19,8 +19,10 @@ export const HOLD_SECONDS = 0.35;   // a deliberate blink; normal blinks are ~0.
 export const WAKE_SECONDS = 1.5;    // hold this long to wake from REST
 const EAR_START = 0.2;              // "closed" line until we learn this person's eyes
 const BLINK_SCORE = 0.55;            // face model's "eyes closed" score that counts as closed
+const STRONG_BLINK = 0.7;            // ...and this is "certainly closed", even after calibration
 const LOOK_DOWN = 0.35;            // looking-down score above this = eyes aimed down
 const STALE_MS = 1000;
+const OPEN_GRACE = 0.1;            // eyes must be open this long to end a blink
 
 function dist(a, b) {
   return Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -69,10 +71,12 @@ export class EyeTracker {
         numFaces: 1,
         outputFaceBlendshapes: true,
       });
+      this._remake = make;
       try {
         this.model = await make("GPU");
       } catch (e) {
         this.model = await make("CPU");      // some phones/browsers have no GPU support
+        this._remake = null;
       }
     } catch (e) {
       this.status = "error";
@@ -102,7 +106,16 @@ export class EyeTracker {
     let r;
     try {
       r = this.model.detectForVideo(v, performance.now());
+      this._errors = 0;
     } catch (e) {
+      // some browsers create the GPU model fine but then fail every frame: switch to CPU
+      this._errors = (this._errors || 0) + 1;
+      if (this._errors === 15 && this._remake) {
+        this.message = "switching face model…";
+        const remake = this._remake; this._remake = null; this.model = null;
+        remake("CPU").then((m) => { this.model = m; this._errors = 0; this.message = "looking for your face…"; })
+          .catch(() => { this.status = "error"; this.message = "face model failed - try Chrome or Safari"; });
+      }
       return;
     }
     const now = performance.now();
@@ -140,6 +153,7 @@ export class EyeTracker {
 export class BlinkButton {
   constructor(calibration = load("calibration", null)) {
     this.closedTime = 0;
+    this.openTime = 0;             // how long the eyes have been open again
     this.fired = false;
     this.baseline = null;          // this person's open-eye EAR, learned slowly
     this.calibration = calibration;
@@ -152,6 +166,9 @@ export class BlinkButton {
   closed(r) {
     if (!r) return false;
     const c = this.calibration;
+    const lookingDown = r.down != null && r.down > LOOK_DOWN;
+    // the face model being very sure the eyes are shut always counts (unless looking down)
+    if (!lookingDown && r.blink != null && r.blink > STRONG_BLINK) return true;
     if (c) {                                   // this person's measured cutoff
       if (c.signal === "blink" && r.blink != null) return r.blink > c.threshold;
       if (c.signal === "ear") return r.ear < c.threshold;
@@ -176,14 +193,19 @@ export class BlinkButton {
   update(r, dt) {
     this.learn(r);
     if (this.closed(r)) {
+      this.openTime = 0;
       this.closedTime += dt;
       if (this.closedTime >= HOLD_SECONDS && !this.fired) {
         this.fired = true;
         return true;
       }
     } else {
-      this.closedTime = 0;
-      this.fired = false;
+      // one flickery "open" frame shouldn't restart a long blink
+      this.openTime += dt;
+      if (this.openTime >= OPEN_GRACE) {
+        this.closedTime = 0;
+        this.fired = false;
+      }
     }
     return false;
   }
