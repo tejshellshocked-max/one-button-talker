@@ -1,13 +1,13 @@
 :root {
-  /* Apple-style light theme (like the Health and Settings apps) */
+  /* Apple Health-style theme: gray background, white cards, pink accent */
   --bg: #f2f2f7;
   --surface: #ffffff;
   --line: rgba(60, 60, 67, .12);
   --ink: #000000;
   --muted: #8a8a8e;
-  --lit: #007aff;
+  --lit: #ff2d55;
   --lit-ink: #ffffff;
-  --accent: #007aff;
+  --accent: #ff2d55;
   --ok: #34c759;
   --warn: #ff9500;
   --bad: #ff3b30;
@@ -24,7 +24,7 @@
 @media (prefers-color-scheme: dark) {
   /* night mode for dark hospital rooms */
   :root { --bg: #000000; --surface: #1c1c1e; --line: rgba(84, 84, 88, .5); --ink: #ffffff; --muted: #98989f;
-          --lit: #0a84ff; --accent: #0a84ff; --ok: #30d158; --bad: #ff453a; --alarm: #ff453a;
+          --lit: #ff375f; --accent: #ff375f; --ok: #30d158; --bad: #ff453a; --alarm: #ff453a;
           --shadow: none; --tint-red: #3a1614; --tint-gray: #2c2c2e; }
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -43,10 +43,11 @@ body {
 }
 
 /* ---------- top bar ---------- */
-#topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; }
+#topbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; min-height: 44px; }
+#title img { display: none; }
 #title { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
 #title img { width: 30px; height: 30px; border-radius: 7px; }
-#pagename { font-weight: 700; font-size: 22px; letter-spacing: -.02em; white-space: nowrap;
+#pagename { font-weight: 800; font-size: clamp(22px, 2.2vh + 12px, 34px); letter-spacing: -.025em; white-space: nowrap;
             overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 #pills { display: flex; gap: 8px; align-items: center; flex: none; }
 .pill { display: flex; align-items: center; gap: 7px; background: var(--surface); border: 0; box-shadow: var(--shadow);
@@ -106,7 +107,7 @@ body {
 .tile.menu { font-size: min(calc(var(--tile-font) * 1.05), calc(100cqw / var(--n) * 0.16)); gap: 6px; }
 .tile.menu svg { width: 1.9em; height: 1.9em; }
 .tile.lit { background: var(--lit) !important; color: var(--lit-ink) !important;
-            box-shadow: 0 0 0 3px var(--lit), 0 8px 24px rgba(0, 122, 255, .35) !important; }
+            box-shadow: 0 0 0 3px var(--lit), 0 8px 24px rgba(255, 45, 85, .35) !important; }
 .tile.lit svg { stroke: #fff !important; }
 .tile.menu.lit svg { background: rgba(255, 255, 255, .22) !important; }
 .tile.quick { background: var(--surface); }
@@ -115,13 +116,26 @@ body {
 .tile.suggest { background: var(--surface); color: var(--accent); }
 .tile.history { background: var(--surface); }
 .tile.setting { background: var(--surface); }
-/* home screen: a colored rounded-square icon on each tile, like the iPhone Settings app */
-.tile.menu svg { box-sizing: content-box; width: 1.15em; height: 1.15em; padding: .38em; border-radius: .5em;
-                 stroke: #fff; stroke-width: 2.2; background: var(--c, #8e8e93); }
-.tile.c-KEYBOARD { --c: #007aff; } .tile.c-NEEDS { --c: #34c759; } .tile.c-FEELINGS { --c: #ff9500; }
-.tile.c-PAIN { --c: #ff3b30; } .tile.c-PEOPLE { --c: #af52de; } .tile.c-CHAT { --c: #5ac8fa; }
-.tile.c-YESNO { --c: #30b0c7; } .tile.c-SETTINGS { --c: #8e8e93; } .tile.c-REST { --c: #5856d6; }
+/* home screen: Apple Health-style cards. Small colored icon + name on top, gray preview below */
+.tile.menu { align-items: stretch; justify-content: space-between; text-align: left; padding: .7em .8em;
+             font-size: min(calc(var(--tile-font) * 1.05), calc(100cqw / var(--n) * 0.15)); }
+.tile.menu .hd { display: flex; align-items: center; gap: .4em; color: var(--c, var(--muted)); font-weight: 700;
+                 font-size: .78em; letter-spacing: 0; }
+.tile.menu .hd .lbl { flex: 1; -webkit-line-clamp: 1; }
+.tile.menu .chev { font-style: normal; color: var(--muted); font-weight: 400; font-size: 1.3em; line-height: 1; opacity: .6; }
+.tile.menu svg { width: 1.15em; height: 1.15em; stroke: var(--c, var(--muted)); fill: none; stroke-width: 2.3; }
+.tile.menu .sub { color: var(--ink); font-weight: 700; font-size: 1em; line-height: 1.15; letter-spacing: -.015em;
+                  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.tile.menu.lit .hd, .tile.menu.lit .chev, .tile.menu.lit .sub { color: #fff; }
+/* the same category colors the Health app uses */
+.tile.c-KEYBOARD { --c: #007aff; } .tile.c-NEEDS { --c: #34c759; } .tile.c-FEELINGS { --c: #00c7be; }
+.tile.c-PAIN { --c: #ff3b30; } .tile.c-PEOPLE { --c: #af52de; } .tile.c-CHAT { --c: #ff9500; }
+.tile.c-YESNO { --c: #5ac8fa; } .tile.c-SETTINGS { --c: #8e8e93; } .tile.c-REST { --c: #5e5ce6; }
 .tile.c-MYPHRASES { --c: #ff2d55; }
+/* phrase pages: a thin bar of the page's color, like Health's charts */
+#grid.p-NEEDS { --c: #34c759; } #grid.p-FEELINGS { --c: #00c7be; } #grid.p-PAIN { --c: #ff3b30; }
+#grid.p-PEOPLE { --c: #af52de; } #grid.p-CHAT { --c: #ff9500; } #grid[class*="p-MY"] { --c: #ff2d55; }
+#grid .tile.phrase { box-shadow: var(--shadow), inset 0 4px 0 var(--c, transparent); }
 
 /* ---------- footer ---------- */
 #footer { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 13px;
@@ -213,10 +227,15 @@ body {
 }
 @media (orientation: portrait) {
   :root { --tile-font: clamp(13px, 1.9vw + 1vh, 26px); }
+  /* narrow phone cards: drop the arrow so the colored name fits */
+  .tile.menu { padding: .6em .55em; font-size: min(var(--tile-font), calc(100cqw / var(--n) * 0.15)); }
+  .tile.menu .chev { display: none; }
+  .tile.menu .hd { font-size: .8em; gap: .3em; }
+  .tile.menu .hd svg { width: 1em; height: 1em; }
 }
 @media (max-width: 560px) {
   #linktext { display: none; }
-  #pagename { font-size: 17px; }
+  #pagename { font-size: 26px; }
   #camtext { max-width: 96px; overflow: hidden; text-overflow: ellipsis; }
   #title img { width: 26px; height: 26px; }
 }

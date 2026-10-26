@@ -498,6 +498,13 @@ function announce() {
 }
 
 // ---------- drawing ----------
+function menuPreview(label) {
+  const page = pages.find(([n]) => n === label);
+  if (page) return cap(page[1][0]) + "…";
+  return { KEYBOARD: "Spell anything", "MY PHRASES": myPhrases.length ? cap(myPhrases[0]) + "…"
+           : "Add your own", "YES / NO": "Answer a question", SETTINGS: "Speed, voice, camera",
+           REST: "Pause until a long blink" }[label] || "";
+}
 let _structKey = "";
 function render() {
   const rs = rows();
@@ -527,8 +534,15 @@ function render() {
         const ic = r.kind === "menu" ? icon(label)
           : label === "BACK" ? icon("BACK") : label === "HOME" ? icon("HOME")
           : label === "SPEAK" ? icon("SPEAK") : label === "I NEED HELP" ? icon("HELP") : "";
-        t.innerHTML = ic + `<span class="lbl"></span>`;
-        t.querySelector(".lbl").textContent = label;
+        if (r.kind === "menu") {
+          // Health-app style card: colored icon + name on top, a gray preview underneath
+          t.innerHTML = `<div class="hd">${ic}<span class="lbl"></span><i class="chev">›</i></div><div class="sub"></div>`;
+          t.querySelector(".lbl").textContent = cap(label);
+          t.querySelector(".sub").textContent = menuPreview(label);
+        } else {
+          t.innerHTML = ic + `<span class="lbl"></span>`;
+          t.querySelector(".lbl").textContent = label;
+        }
         row.appendChild(t);
       });
       grid.appendChild(row);
