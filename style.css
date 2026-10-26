@@ -21,7 +21,7 @@
   --gap: clamp(6px, 1.2vmin, 12px);
   --tile-font: clamp(14px, 1.2vw + 1.45vh, 30px);
 }
-@media (prefers-color-scheme: dark) {
+@media all {   /* always the black + pink Health look */
   /* night mode for dark hospital rooms */
   :root { --bg: #000000; --surface: #1c1c1e; --line: rgba(84, 84, 88, .5); --ink: #ffffff; --muted: #98989f;
           --lit: #ff375f; --accent: #ff375f; --ok: #30d158; --bad: #ff453a; --alarm: #ff453a;
